@@ -18,6 +18,7 @@ model User {
 
   username       String  @unique
   hashedPassword String
+  upperMid       BigInt?
   cookie         String?
   userAgent      String?
 
