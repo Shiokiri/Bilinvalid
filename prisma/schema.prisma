@@ -1,0 +1,88 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id String @id @default(cuid())
+
+  username       String  @unique
+  hashedPassword String
+  cookie         String?
+  userAgent      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Media {
+  id BigInt @id @unique
+
+  type      Int
+  title     String
+  cover     String
+  intro     String
+  page      Int
+  duration  Int
+  upperMid  BigInt
+  upperName String
+  upperFace String
+  attr      Int
+  collect   Int
+  play      Int
+  danmaku   Int
+  link      String
+  ctime     DateTime
+  pubtime   DateTime
+  favTime   DateTime
+  bvid      String
+
+  Favorites Favorite[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Favorite {
+  id BigInt @id @unique
+
+  fid            BigInt
+  mid            BigInt
+  attr           Int
+  title          String
+  cover          String
+  upperMid       BigInt
+  upperName      String
+  upperFace      String
+  upperFollowed  Boolean
+  upperVipType   Int
+  upperVipStatue Int
+  coverType      Int
+  collect        Int
+  play           Int
+  thunbUp        Int
+  share          Int
+  type           Int
+  intro          String
+  ctime          DateTime
+  mtime          DateTime
+  state          Int
+  favTime        DateTime
+  likeState      Int
+  mediaCount     Int
+
+  medias Media[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
