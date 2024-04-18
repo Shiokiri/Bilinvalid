@@ -7,16 +7,23 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "postinstall": "prisma generate",
     "db:migrate": "pnpm dlx prisma migrate dev",
     "db:push": "pnpm dlx prisma db push"
   },
   "dependencies": {
     "@prisma/client": "^5.12.1",
+    "@tanstack/react-query": "^5.29.2",
+    "@trpc/client": "11.0.0-rc.340",
+    "@trpc/next": "11.0.0-rc.340",
+    "@trpc/react-query": "11.0.0-rc.340",
+    "@trpc/server": "11.0.0-rc.340",
     "axios": "^1.6.8",
     "next": "14.2.1",
     "prisma": "^5.12.1",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "^20",

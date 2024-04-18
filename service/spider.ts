@@ -1,11 +1,11 @@
 import axios from "axios";
-
 import sleep from "@/utils/sleep";
+import db from "@/utils/db";
 
 export const config = {
-  cookie: "",
-  userAgent: "",
-  upperMid: 0,
+  cookie: process.env.COOKIE || "",
+  userAgent: process.env.USER_AGENT || "",
+  upperMid: process.env.UPPER_MID || "",
   timeout: 5000,
   delay: 5000,
 };
@@ -75,6 +75,8 @@ const saveFavoriteContent = async (media_id: number, media_count: number) => {
 };
 
 const saveFavorite = async () => {
+  console.log(`spider config: ${config}`);
+
   const favorites = await listAllFavorite();
   const favoritesWithMetadata = await Promise.all(
     favorites.list.map((favorite: { id: number }) =>
@@ -84,6 +86,7 @@ const saveFavorite = async () => {
   // save favoritesWithMetadata to database
   for (const favorite of favoritesWithMetadata) {
     await saveFavoriteContent(favorite.id, favorite.media_count);
+    console.log(`Saved favorite: ${favorite.id}`);
     await sleep(config.delay);
   }
 };

@@ -13,21 +13,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id String @id @default(cuid())
+model Config {
+  id String @id
 
-  username       String  @unique
-  hashedPassword String
-  upperMid       BigInt?
-  cookie         String?
-  userAgent      String?
+  upperMid  BigInt?
+  cookie    String?
+  userAgent String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Media {
-  id BigInt @id @unique
+  id BigInt @id
 
   type      Int
   title     String
@@ -55,7 +53,7 @@ model Media {
 }
 
 model Favorite {
-  id BigInt @id @unique
+  id BigInt @id
 
   fid            BigInt
   mid            BigInt
