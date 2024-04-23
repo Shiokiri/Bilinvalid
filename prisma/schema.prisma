@@ -69,14 +69,14 @@ model Favorite {
   coverType      Int
   collect        Int
   play           Int
-  thunbUp        Int
+  thumbUp        Int
   share          Int
   type           Int
   intro          String
   ctime          DateTime
   mtime          DateTime
   state          Int
-  favTime        DateTime
+  favState       Int
   likeState      Int
   mediaCount     Int
 

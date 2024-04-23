@@ -71,22 +71,82 @@ const saveFavoriteContent = async (media_id: number, media_count: number) => {
       getFavoriteContent(media_id, index + 1)
     )
   );
+
   // save favoriteContent to database
 };
 
-const saveFavorite = async () => {
-  console.log(`spider config: ${config}`);
+const saveFavoritesWithMetadata = async (favoritesWithMetadata: any) => {
+  const favoriteIdsSet = new Set();
+  for (const favorite of favoritesWithMetadata) {
+    favoriteIdsSet.add(favorite.id);
+  }
+  const favorites = await db.favorite.findMany();
+  for (const favorite of favorites) {
+    if (!favoriteIdsSet.has(favorite.id)) {
+      await db.favorite.delete({
+        where: {
+          id: favorite.id,
+        },
+      });
+    }
+  }
+  for (const favorite of favoritesWithMetadata) {
+    const data = {
+      fid: favorite.fid,
+      mid: favorite.mid,
+      attr: favorite.attr,
+      title: favorite.title,
+      cover: favorite.cover,
+      upperMid: favorite.upper.mid,
+      upperName: favorite.upper.name,
+      upperFace: favorite.upper.face,
+      upperFollowed: favorite.upper.followed,
+      upperVipType: favorite.upper.vip_type,
+      upperVipStatue: favorite.upper.vip_statue,
+      coverType: favorite.cover_type,
+      collect: favorite.cnt_info.collect,
+      play: favorite.cnt_info.play,
+      thumbUp: favorite.cnt_info.thumb_up,
+      share: favorite.cnt_info.share,
+      type: favorite.type,
+      intro: favorite.intro,
+      ctime: new Date(favorite.ctime * 1000),
+      mtime: new Date(favorite.mtime * 1000),
+      state: favorite.state,
+      favState: favorite.fav_state,
+      likeState: favorite.like_state,
+      mediaCount: favorite.media_count,
+    };
+    await db.favorite.upsert({
+      where: {
+        id: favorite.id,
+      },
+      update: {
+        ...data,
+      },
+      create: {
+        ...data,
+        id: favorite.id,
+      },
+    });
+  }
+};
 
+const saveFavorite = async () => {
   const favorites = await listAllFavorite();
   const favoritesWithMetadata = await Promise.all(
     favorites.list.map((favorite: { id: number }) =>
       getFavoriteMetadata(favorite.id)
     )
   );
+
   // save favoritesWithMetadata to database
+  await saveFavoritesWithMetadata(favoritesWithMetadata);
+  return;
+
   for (const favorite of favoritesWithMetadata) {
     await saveFavoriteContent(favorite.id, favorite.media_count);
-    console.log(`Saved favorite: ${favorite.id}`);
+    console.log(`Saved favoriteId: ${favorite.id}`);
     await sleep(config.delay);
   }
 };
