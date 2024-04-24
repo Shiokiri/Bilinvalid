@@ -81,7 +81,7 @@ model MediasInFavorites {
   favorite Favorite @relation(fields: [fid], references: [id])
   fid      BigInt
 
-  favTime DateTime // 收藏时间
+  favtime DateTime // 收藏时间
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

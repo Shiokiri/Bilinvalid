@@ -82,7 +82,7 @@ const saveFavoritesWithMetadataToDatabase = async (
       });
     }
   }
-  for (const [index, favorite] of favoritesWithMetadata.enries()) {
+  for (const [index, favorite] of favoritesWithMetadata.entries()) {
     const data = {
       fid: favorite.fid,
       mid: favorite.mid,
