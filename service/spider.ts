@@ -65,10 +65,12 @@ const api = {
   },
 };
 
-const saveFavoritesWithMetadata = async (favoritesWithMetadata: any) => {
+const saveFavoritesWithMetadataToDatabase = async (
+  favoritesWithMetadata: any
+) => {
   const favoriteIdsSet = new Set();
   for (const favorite of favoritesWithMetadata) {
-    favoriteIdsSet.add(favorite.id);
+    favoriteIdsSet.add(BigInt(favorite.id));
   }
   const favorites = await db.favorite.findMany();
   for (const favorite of favorites) {
@@ -80,7 +82,7 @@ const saveFavoritesWithMetadata = async (favoritesWithMetadata: any) => {
       });
     }
   }
-  for (const favorite of favoritesWithMetadata) {
+  for (const [index, favorite] of favoritesWithMetadata.enries()) {
     const data = {
       fid: favorite.fid,
       mid: favorite.mid,
@@ -106,6 +108,7 @@ const saveFavoritesWithMetadata = async (favoritesWithMetadata: any) => {
       favState: favorite.fav_state,
       likeState: favorite.like_state,
       mediaCount: favorite.media_count,
+      index,
     };
     await db.favorite.upsert({
       where: {
@@ -122,6 +125,19 @@ const saveFavoritesWithMetadata = async (favoritesWithMetadata: any) => {
   }
 };
 
+const saveFavoriteContentToDatabase = async (favoriteContent: any) => {
+  for (const media of favoriteContent.medias) {
+    const data = {
+      id: media.id,
+      favorite: {
+        connect: {
+          id: media.fid,
+        },
+      },
+    };
+  }
+};
+
 const saveFavoriteContent = async (media_id: number, media_count: number) => {
   const favoriteContent = await Promise.all(
     Array.from({ length: Math.ceil(media_count / 20) }).map((_, index) =>
@@ -130,6 +146,7 @@ const saveFavoriteContent = async (media_id: number, media_count: number) => {
   );
 
   // save favoriteContent to database
+  await saveFavoriteContentToDatabase(favoriteContent);
 };
 
 const saveFavorite = async () => {
@@ -141,7 +158,8 @@ const saveFavorite = async () => {
   );
 
   // save favoritesWithMetadata to database
-  await saveFavoritesWithMetadata(favoritesWithMetadata);
+  await saveFavoritesWithMetadataToDatabase(favoritesWithMetadata);
+  return;
 
   for (const favorite of favoritesWithMetadata) {
     await saveFavoriteContent(favorite.id, favorite.media_count);

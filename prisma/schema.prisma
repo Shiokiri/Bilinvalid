@@ -13,17 +13,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Config {
-  id String @id
-
-  upperMid  BigInt?
-  cookie    String?
-  userAgent String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 model Media {
   id BigInt @id
 
@@ -43,10 +32,9 @@ model Media {
   link      String
   ctime     DateTime
   pubtime   DateTime
-  favTime   DateTime
   bvid      String
 
-  Favorites Favorite[]
+  favorites MediasInFavorites[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -79,9 +67,24 @@ model Favorite {
   favState       Int
   likeState      Int
   mediaCount     Int
+  index          Int // 收藏夹排序
 
-  medias Media[]
+  medias MediasInFavorites[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model MediasInFavorites {
+  media    Media    @relation(fields: [mid], references: [id])
+  mid      BigInt
+  favorite Favorite @relation(fields: [fid], references: [id])
+  fid      BigInt
+
+  favTime DateTime // 收藏时间
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@id([mid, fid])
 }
