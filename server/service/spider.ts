@@ -68,7 +68,8 @@ const api = {
 const saveFavoritesWithMetadataToDatabase = async (
   favoritesWithMetadata: any
 ) => {
-  const favoriteIdsSet = new Set();
+  // 删除已经不存在的收藏夹 开始
+  const favoriteIdsSet = new Set<BigInt>();
   for (const favorite of favoritesWithMetadata) {
     favoriteIdsSet.add(BigInt(favorite.id));
   }
@@ -82,6 +83,7 @@ const saveFavoritesWithMetadataToDatabase = async (
       });
     }
   }
+  // 删除已经不存在的收藏夹 结束
   for (const [index, favorite] of favoritesWithMetadata.entries()) {
     const data = {
       fid: favorite.fid,
@@ -126,27 +128,116 @@ const saveFavoritesWithMetadataToDatabase = async (
 };
 
 const saveFavoriteContentToDatabase = async (favoriteContent: any) => {
+  // 删除已经不存在的收藏夹视频关系 开始
+  const mediasInFavorite = await db.favorite.findUnique({
+    where: {
+      id: favoriteContent.info.id,
+    },
+    include: {
+      medias: true,
+    },
+  });
+  if (mediasInFavorite && mediasInFavorite.medias.length > 0) {
+    const mediaIdsSet = new Set<BigInt>();
+    for (const media of favoriteContent.medias) {
+      mediaIdsSet.add(BigInt(media.id));
+    }
+    for (const media of mediasInFavorite.medias) {
+      if (!mediaIdsSet.has(media.mid)) {
+        await db.mediasInFavorites.delete({
+          where: {
+            mid_fid: {
+              fid: favoriteContent.info.id,
+              mid: media.mid,
+            },
+          },
+        });
+      }
+    }
+  }
+  // 删除已经不存在的收藏夹视频关系 结束
   for (const media of favoriteContent.medias) {
     const data = {
-      id: media.id,
-      favorite: {
-        connect: {
-          id: media.fid,
+      type: media.type,
+      intro: media.intro,
+      page: media.page,
+      duration: media.duration,
+      upperMid: media.upper.mid,
+      upperName: media.upper.name,
+      upperFace: media.upper.face,
+      attr: media.attr,
+      collect: media.cnt_info.collect,
+      play: media.cnt_info.play,
+      danmaku: media.cnt_info.danmaku,
+      link: media.link,
+      ctime: new Date(media.ctime * 1000),
+      pubtime: new Date(media.pubtime * 1000),
+      bvid: media.bvid,
+    };
+    await db.media.upsert({
+      where: {
+        id: media.id,
+      },
+      update: {
+        ...data,
+      },
+      create: {
+        ...data,
+        id: media.id,
+        title: media.title, // title 会失效
+        cover: media.cover, // cover 会失效
+      },
+    });
+    const relation = await db.mediasInFavorites.findUnique({
+      where: {
+        mid_fid: {
+          fid: favoriteContent.info.id,
+          mid: media.id,
         },
       },
-    };
+    });
+    if (relation) {
+      await db.mediasInFavorites.update({
+        where: {
+          mid_fid: {
+            fid: favoriteContent.info.id,
+            mid: media.id,
+          },
+        },
+        data: {
+          favtime: new Date(media.fav_time * 1000),
+        },
+      });
+    } else {
+      await db.mediasInFavorites.create({
+        data: {
+          fid: favoriteContent.info.id,
+          mid: media.id,
+          favtime: new Date(media.fav_time * 1000),
+        },
+      });
+    }
   }
 };
 
 const saveFavoriteContent = async (media_id: number, media_count: number) => {
-  const favoriteContent = await Promise.all(
-    Array.from({ length: Math.ceil(media_count / 20) }).map((_, index) =>
-      api.getFavoriteContent(media_id, index + 1)
+  const favoriteContent = Object.values(
+    await Promise.all(
+      Array.from({ length: Math.ceil(media_count / 20) }).map((_, index) =>
+        api.getFavoriteContent(media_id, index + 1)
+      )
     )
   );
+  const mediasInFavorite = {
+    info: favoriteContent[0].info,
+    medias: favoriteContent.reduce(
+      (acc, content) => [...acc, ...content.medias],
+      []
+    ),
+  };
 
   // save favoriteContent to database
-  await saveFavoriteContentToDatabase(favoriteContent);
+  await saveFavoriteContentToDatabase(mediasInFavorite);
 };
 
 const saveFavorite = async () => {
@@ -159,11 +250,10 @@ const saveFavorite = async () => {
 
   // save favoritesWithMetadata to database
   await saveFavoritesWithMetadataToDatabase(favoritesWithMetadata);
-  return;
 
   for (const favorite of favoritesWithMetadata) {
     await saveFavoriteContent(favorite.id, favorite.media_count);
-    console.log(`Saved favoriteId: ${favorite.id}`);
+    console.log(`Medias in favorite:${favorite.id}. have been saved.`);
     await sleep(config.delay);
   }
 };
