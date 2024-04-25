@@ -1,6 +1,6 @@
 import axios from "axios";
-import sleep from "@/utils/sleep";
-import db from "@/utils/db";
+import { sleep } from "@/lib/utils";
+import db from "@/lib/db";
 
 export const config = {
   cookie: process.env.COOKIE || "",
