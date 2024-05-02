@@ -13,6 +13,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Config {
+  id String @id @default(cuid())
+
+  cookie       String?
+  userAgent    String?
+  upperMid     BigInt
+  spiderStatus Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Media {
   id BigInt @id
 
